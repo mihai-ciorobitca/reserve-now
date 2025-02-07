@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+    <title>Create Announce</title>
+</head>
+
+<body class="bg-dark">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="bg-light p-4 rounded shadow col-sm-10 col-md-8 col-lg-6 col-xl-5">
+            <form id="form" action="/home/create" method="post" onsubmit="return validateForm()" enctype="multipart/form-data">
+                <div class="h2">
+                    Announce Form
+                </div>
+                <div class="form-group">
+                    <label for="title-input">
+                        Title<span class="text-danger">*</span>
+                    </label>
+                    <input class="form-control" id="title-input" name="title" placeholder="Enter title" required />
+                </div>
+                <div class="form-group">
+                    <label for="description-input">
+                        City<span class="text-danger">*</span>
+                    </label>
+                    <div class="dropdown">
+                        <button class="btn bg-white text-muted border dropdown-toggle w-100" type="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="cityDropdown">
+                            Select City
+                        </button>
+                        <div class="dropdown-menu w-100" aria-labelledby="cityDropdown" name="city">
+                            <input type="text" name="city" class="form-control" id="citySearch"
+                                placeholder="Search cities" />
+                        </div>
+                        <input type="hidden" name="city" id="selectedCity" value="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="description-input">
+                        Description<span class="text-danger">*</span>
+                    </label>
+                    <textarea name="description" type="password" class="form-control" id="description-input"
+                        placeholder="Describe your announce" rows="5" style="resize: none" required></textarea>
+                </div>
+                <div class="form-group mb-2">
+                    <label for="image_file">Image<span class="text-danger">*</span>
+                    </label>
+                    <div class="custom-file">
+                        <input type="file" max="16777216" name="image" class="custom-file-input" id="image_file" name="image_file"
+                            accept="image/*" required>
+                        <label class="custom-file-label" for="image_file">Choose file</label>
+                    </div>
+                    <input type="hidden" id="image_base64" name="image_base64">
+                </div>
+                <button type="submit" class="form-group w-100 mt-3 btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js"></script>
+    <script>
+        function validateForm() {
+            const selectedCity = document.getElementById('selectedCity').value;
+            const cityButton = document.getElementById('cityDropdown');
+
+            if (selectedCity === "") {
+                cityButton.classList.add("border-danger");
+                return false;
+            }
+            return True
+        }
+    </script>
+    <script>
+        document.getElementById('image_file').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    document.getElementById('image_base64').value = reader.result.split(',')[1];
+                };
+                reader.readAsDataURL(file);
+                document.querySelector('.custom-file-label').textContent = file.name;
+            }
+        });
+    </script>
+    <script>
+        const cities = [
+            "Alba Iulia",
+            "Arad",
+            "Bacau",
+            "Baia Mare",
+            "Bistrita",
+            "Botosani",
+            "Braila",
+            "Brasov",
+            "Bucuresti",
+            "Calarasi",
+            "Cluj Napoca",
+            "Constanta",
+            "Craiova",
+            "Deva",
+            "Drobeta Turnu Severin",
+            "Focsani",
+            "Galati",
+            "Giurgiu",
+            "Hunedoara",
+            "Iasi",
+            "Lugoj",
+            "Medias",
+            "Miercurea Ciuc",
+            "Oradea",
+            "Piatra Neamt",
+            "Pitesti",
+            "Ploiesti",
+            "Ramnicu Valcea",
+            "Resita",
+            "Roman",
+            "Satu Mare",
+            "Sibiu",
+            "Sighisoara",
+            "Slatina",
+            "Suceava",
+            "Targu Jiu",
+            "Targu Mures",
+            "Timisoara",
+            "Tulcea",
+            "Vaslui",
+            "Barlad",
+            "Caracal",
+            "Curtea de Arges",
+            "Dorohoi",
+            "Dragasani",
+            "Husi",
+            "Mangalia",
+            "Oltenita",
+            "Onesti",
+            "Pascani",
+            "Petrosani",
+            "Radauti",
+            "Sacele",
+            "Sfantu Gheorghe",
+            "Tecuci",
+            "Turda",
+            "Zalau"
+        ];
+
+        const cityDropdown = document.getElementById('cityDropdown');
+        const dropdownMenu = cityDropdown.nextElementSibling;
+        let dropdownItems = [];
+
+        function createDropdownItems(cityList) {
+            dropdownMenu.innerHTML = "";
+            cityList.forEach(city => {
+                const link = document.createElement('a');
+                link.classList.add('dropdown-item');
+                link.href = '#';
+                link.dataset.city = city;
+                link.textContent = city;
+                dropdownMenu.appendChild(link);
+                dropdownItems.push(link);
+
+                link.addEventListener('click', (event) => {
+                    cityButton = document.getElementById('cityDropdown');
+                    cityButton.classList.remove("border-danger");
+                    const selectedCity = event.target.dataset.city;
+                    cityDropdown.textContent = selectedCity;
+                    document.getElementById('selectedCity').value = selectedCity;
+                });
+            });
+            dropdownMenu.style.maxHeight = '200px';
+            dropdownMenu.style.overflowY = 'auto';
+        }
+
+        createDropdownItems(cities);
+    </script>
+</body>
+
+</html>

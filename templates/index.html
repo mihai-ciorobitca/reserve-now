@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta http-equiv="refresh" content="1"> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+    <title>Reserve Now</title>
+</head>
+
+<body class="bg-dark text-light">
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <span class="navbar-brand">Reserve Now</span>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active {% if email == None %} d-none {% endif %} ">
+                    <a class="nav-link" href="/home">Home<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/register">Register</a>
+                </li>
+                <li class="nav-item {% if email == None %} d-none {% endif %}">
+                    <a class="nav-link text-danger" href="/logout">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        <section id="about" class="py-3 mt-5 container">
+            <h3>What Is Reserve Now ?</h3>
+            <p>
+                You lost your train back home ?
+            </p>
+            <p>
+                Are you stuck in a new city and you don't know anybody ?
+            </p>
+            <p>
+                Don't panic! You are not alone.
+                Reserve Now is a place for those who need some help but rending an airbnb is too expensive.
+                With Reserve Now you can find people can help for real, not only get some cash out of your pocket.
+            </p>
+
+            <h4>My Story</h4>
+            <p>
+                I experience many moments waiting for a train too late or just walking on the street in a new city
+                just because I didn't have where to stay for few hours.
+            </p>
+            <p>
+                So I wanted to build a platform where people can
+                support this people like me.
+            </p>
+        </section>
+        <section id="features" class="container py-2">
+            <h3>
+                How It works ?
+            </h3>
+            <ul>
+                <li>
+                    Create an account(we also support Google Authentication for fast registration)
+                </li>
+                <li>
+                    Pick a city where you want spend your night or just few hours
+                </li>
+                <li>
+                    Find an announce that fit your needs or post one yourself
+                </li>
+                <li>
+                    Chat with someone or wait until someone can help you
+                </li>
+            </ul>
+        </section>
+        <section id="pricing" class="container py-2">
+            <h3>
+                What Is The Price ?
+            </h3>
+            <p>
+                Using the platform costs you no money.
+            </p>
+            <p>
+                I encourage helping the others for no money because this is an emergency.
+                Anyway if you can offer any services to your host in a way would be great. What this means ?
+            </p>
+            <p>
+                If your host need an electrition and you are an electrition and can help you can change
+                your skills for few hours of hosting. I like to call this win-win!
+            </p>
+            <p>
+                You can support this platform with a donation on my
+                <a class="text-primary" href="https://www.paypal.com/paypalme/mihaiciorobitca" style="cursor: pointer;">PayPal</a>
+            </p>
+        </section>
+    </main>
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <span>&copy; 2025 Reserve Now. All rights reserved.</span>
+        </div>
+    </footer>
+</body>
+
+</html>
