@@ -104,7 +104,6 @@ def logout():
     session.clear()
     return redirect("login")
 
-
 @app.get("/home")
 @protected("user")
 def home():

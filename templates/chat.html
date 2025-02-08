@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <title>Chat Room</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+        }
+
+        .messages {
+            overflow-y: scroll;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: transparent;
+        }
+
+        .chat {
+            cursor: pointer;
+        }
+
+        .input-container {
+            background-color: #1c1c1c;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body class="text-white">
+
+    <div class="d-flex" style="height: 100vh;">
+        <!-- Sidebar -->
+        <div class="col-12 col-xl-3 col-md-4 d-flex flex-column h-100" style="background-color: #222; height: 100vh;">
+            <div class="row px-3 text-center pt-3">
+                <h5>Chats</h5>
+            </div>
+            <div class="row pb-3 px-3 border-bottom">
+                <div class="w-100 p-2 rounded" style="background-color: #444;">
+                    <div class="input-group bg-transparent">
+                        <i class="input-group-text bi bi-search bg-transparent text-white border-0"></i>
+                        <input class="form-control border-0 shadow-none text-white" style="background-color: #444;"
+                            placeholder="Search" type="text" />
+                    </div>
+                </div>
+            </div>
+            <!-- Chat Items -->
+            <div class="flex-grow-1" style="overflow-x: hide; background-color: #222;">
+                <div class="row chat current" style="background-color: #444;">
+                    <div class="w-100 py-3 px-4 border-bottom">
+                        Chat 1
+                    </div>
+                </div>
+                <div class="row chat">
+                    <div class="w-100 py-3 px-4 border-bottom">
+                        Chat 2
+                    </div>
+                </div>
+                <div class="row chat">
+                    <div class="w-100 py-3 px-4 border-bottom">
+                        Chat 3
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Content -->
+        <div class="col-xl-9 col-md-8 d-flex flex-column h-100 p-0">
+            <div class="messages-container flex-grow-1 p-4" style="background-color: #262626;">
+                <div class="messages d-flex flex-column" style="overflow-y: auto; max-height: calc(100vh - 140px);">
+                    <!-- Messages will go here -->
+                </div>
+            </div>
+
+            <!-- Chat Footer with Input -->
+            <div class="input-container p-3" style="background-color: #1c1c1c;">
+                <div class="input-group rounded p-2" style="background-color: #333;">
+                    <!-- Input Field -->
+                    <input type="text" id="message-input" class="form-control border-0 shadow-none text-white"
+                        placeholder="Type a message" style="background-color: #333" />
+                    <!-- Send Button -->
+                    <button id="send-button" class="input-group-text rounded-circle ml-2 border-0 text-white"
+                        style="background-color: #2980b9">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $(".chat").click(function () {
+                $(".current").css("background-color", "#222").removeClass("current");
+                $(this).addClass("current");
+                $(this).css("background-color", "#444");
+            });
+
+            function adjustMessageContainerHeight() {
+                const messagesHeight = $(".messages-container").height
+                $(".messages").css("max-height", messagesHeight);
+            }
+
+            $("#message-input").keydown(function (event) {
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            $("#send-button").click(sendMessage);
+
+            function sendMessage() {
+                const inputMessage = $("#message-input");
+
+                if (inputMessage.val() != "") {
+                    const newMessage = document.createElement('div');
+                    newMessage.classList.add('message', 'p-2', 'my-2', 'bg-primary', 'rounded');
+                    newMessage.style.display = 'inline-block';
+                    newMessage.style.width = 'auto';
+
+                    const messageContent = document.createElement('div');
+                    messageContent.classList.add('p-1');
+                    messageContent.textContent = inputMessage.val();
+
+                    newMessage.style.alignSelf = 'flex-end';
+                    newMessage.style.maxWidth = '90%';
+                    newMessage.style.wordWrap = 'break-word';
+                    newMessage.style.overflowWrap = 'break-word';
+
+                    newMessage.appendChild(messageContent);
+
+                    $(".messages").append(newMessage);
+
+                    $(".messages").scrollTop($(".messages")[0].scrollHeight);
+
+                    inputMessage.val("");
+                }
+            }
+        })
+    </script>
+
+</body>
+
+</html>
