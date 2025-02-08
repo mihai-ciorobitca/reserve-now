@@ -111,7 +111,7 @@ def home():
 
 
 @app.get("/home/chat")
-@protected("user")
+# @protected("user")
 def chat():
     return render_template("chat.html")
 
