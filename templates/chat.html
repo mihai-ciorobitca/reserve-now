@@ -38,9 +38,9 @@
 
 <body class="text-white">
 
-    <div class="d-flex" style="height: 100vh;">
+    <div class="main d-flex" style="height: 100vh;">
         <!-- Sidebar -->
-        <div class="col-xl-3 col-md-4 d-flex flex-column h-100" style="background-color: #222; height: 100vh;">
+        <div class="sidebar col-xl-3 col-md-4 d-flex flex-column h-100" style="background-color: #222; height: 100vh;">
             <div class="row px-3 text-center pt-3">
                 <h5>Chats</h5>
             </div>
@@ -74,9 +74,13 @@
         </div>
 
         <!-- Main Chat Content -->
-        <div class="col-xl-9 col-md-8 d-none d-md-flex flex-column h-100 p-0">
-            <div class="messages-container flex-grow-1 p-4" style="background-color: #262626;">
-                <div class="messages d-flex flex-column" style="overflow-y: auto; max-height: calc(100vh - 140px);">
+        <div class="content col-12 col-xl-9 col-md-8 d-none d-md-flex flex-column h-100 p-0">
+            <div class="header-main p-3">
+                <h5 class="back-header"><i class="back-icon bi bi-arrow-left mr-2 d-md-none"></i>Chat 1</h5>
+            </div>
+
+            <div class="messages-container p-4 flex-grow-1" style="background-color: #262626;">
+                <div class="messages d-flex flex-column" style="overflow-y: auto;">
                     <!-- Messages will go here -->
                 </div>
             </div>
@@ -104,12 +108,31 @@
                 $(".current").css("background-color", "#222").removeClass("current");
                 $(this).addClass("current");
                 $(this).css("background-color", "#444");
+                const content = $(".content");
+                if (content.hasClass("d-none")) {
+                    const sidebar = $(".sidebar");
+                    content.removeClass("d-none").removeClass("d-md-flex")
+                    content.addClass("d-flex");
+                    sidebar.addClass("d-none").addClass("d-md-flex");
+                    sidebar.removeClass("d-flex");
+                }
             });
 
-            function adjustMessageContainerHeight() {
-                const messagesHeight = $(".messages-container").height
-                $(".messages").css("max-height", messagesHeight);
-            }
+            $(".back-icon").click(function () {
+                const content = $(".content");
+                const sidebar = $(".sidebar");
+                sidebar.removeClass("d-none").removeClass("d-md-flex")
+                sidebar.addClass("d-flex");
+                content.addClass("d-none").addClass("d-md-flex");
+                content.removeClass("d-flex");
+            })
+
+            $(window).on('load', function () {
+                const containerHeight = $(".main").height() - $(".header-main").height() - $(".input-container").height();
+                $(".messages-container").css("height", containerHeight);
+                const maxMessagesHeight = $(".messages-container").innerHeight() - 50;
+                $(".messages").css("max-height", maxMessagesHeight);
+            });
 
             $("#message-input").keydown(function (event) {
                 if (event.keyCode === 13) {
