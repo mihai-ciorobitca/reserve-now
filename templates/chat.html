@@ -127,8 +127,8 @@
                 content.removeClass("d-flex");
             })
 
-            $(window).on('load', function () {
-                const containerHeight = $(".main").height() - $(".header-main").height() - $(".input-container").height();
+            $(window).on('load resize', function () {
+                const containerHeight = $(window).height() - $(".header-main").outerHeight() - $(".input-container").outerHeight();
                 $(".messages-container").css("height", containerHeight);
                 const maxMessagesHeight = $(".messages-container").innerHeight() - 50;
                 $(".messages").css("max-height", maxMessagesHeight);
