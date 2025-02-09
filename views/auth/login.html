@@ -12,7 +12,7 @@
 <body class="bg-dark">
     <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="bg-light p-4 rounded shadow col-sm-10 col-md-8 col-lg-6 col-xl-5">
-            <form id="form" action="/login" method="post">
+            <form id="form" action="/auth/login" method="post">
                 <div class="h2 align-items-center justify-content-center d-flex p-3">
                     Login Form
                 </div>
@@ -62,11 +62,11 @@
                   </div>
                 <button type="submit" class="form-group btn btn-primary w-100 rounded-pill">Login with Email</button>
                 <p class="form-group justify-content-center align-items-center d-flex">
-                    <a href="/reset-password">Forget Password ?</a>
+                    <a href="/auth/reset-password">Forget Password ?</a>
                 </p>
                 <p class="form-group justify-content-center align-items-center d-flex">
                     <span class="mr-2">Don't have an account ?</span>
-                    <a href="/register"> Register</a>
+                    <a href="/auth/register"> Register</a>
                 </p>
             </form>
         </div>
