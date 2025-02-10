@@ -32,8 +32,7 @@ def login():
                 else:
                     session["email"] = email
                     session["id"] = user.id
-                    redirect_url = "/home"
-                return jsonify({"message": "Succesful login", "redirect_url": redirect_url}), 200
+                return jsonify({"message": "Succesful login"}), 200
             else:
                 print(response)
                 return jsonify({"message", response}), 400
