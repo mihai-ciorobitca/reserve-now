@@ -3,13 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.bundle.min.js"></script>
     <title>Home Page</title>
+    <style>
+        .btn:focus,
+        .btn.Focus {
+            outline: 0;
+
+        }
+
+        button:focus {
+            outline: 0;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+        }
+    </style> 
 </head>
-<body>
-    <form action="/auth/logout" method="post">
-        <button type="submit">
-            Logout
+<body class="bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <span class="navbar-brand">Reserve Now</span>
+        <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
         </button>
-    </form>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/home/create">New Post</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/home/my-posts">My Posts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/home/chats">Chats</a>
+                </li>
+                <li class="nav-item {% if email == None %} d-none {% endif %}">
+                    <form action="/auth/logout" method="post">
+                        <button type="submit" class="nav-link text-danger bg-transparent border-0">Logout</a>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div>
+        <div class="row m-2">
+            {% for post in posts %}
+            <div class="col-lg-4 col-md-3 p-3">
+                <div class="card">
+                    <div class="card-header">
+                        {{ post.title }}
+                    </div>
+                    <img class="card-img-top" src="{{ post.public_url }}" alt="Card image cap">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ post.city }}</h5>
+                        <p class="card-text">{{ post.description }}</p>
+                    </div>
+                    <form action="/home/chat" method="get">
+                        <button type="submit" class="btn btn-primary">
+                            Chat
+                        </button>
+                        <input type="hidden" value ="{{post.email}}"/>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </body>
 </html>

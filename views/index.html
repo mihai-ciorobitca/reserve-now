@@ -4,31 +4,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <meta http-equiv="refresh" content="1"> -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.bundle.min.js"></script>
     <title>Reserve Now</title>
+    <style>
+        .btn:focus,
+        .btn.Focus {
+            outline: 0;
+
+        }
+
+        button:focus {
+            outline: 0;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+        }
+    </style>
 </head>
 
 <body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <span class="navbar-brand">Reserve Now</span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+        <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item active {% if email == None %} d-none {% endif %} ">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Main Page<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item {% if not admin %} d-none {% endif %} ">
+                    <a class="nav-link" href="/admin">Admin<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item {% if not email %} d-none {% endif %} ">
                     <a class="nav-link" href="/home">Home<span class="sr-only">(current)</span></a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item {% if admin or email %} d-none {% endif %}">
                     <a class="nav-link" href="/auth/login">Login</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/auth/register">Register</a>
                 </li>
-                <li class="nav-item {% if email == None %} d-none {% endif %}">
-                    <a class="nav-link text-danger" href="/auth/logout">Logout</a>
+                <li class="nav-item {% if not email %} d-none {% endif %}">
+                    <form action="/auth/logout" method="post">
+                        <button type="submit" class="nav-link text-danger bg-transparent border-0">Logout</a>
+                    </form>
                 </li>
             </ul>
         </div>
@@ -44,33 +69,32 @@
             </p>
             <p>
                 Don't panic! You are not alone.
-                Reserve Now is a place for those who need some help but rending an airbnb is too expensive.
-                With Reserve Now you can find people can help for real, not only get some cash out of your pocket.
+                Reserve Now is a place for those who need some help but renting an Airbnb is too expensive.
+                With Reserve Now you can find people who can help for real, not just get some cash out of your pocket.
             </p>
 
             <h4>My Story</h4>
             <p>
-                I experience many moments waiting for a train too late or just walking on the street in a new city
-                just because I didn't have where to stay for few hours.
+                I experienced many moments waiting for a train too late or just walking on the street in a new city
+                because I didn’t have a place to stay for a few hours.
             </p>
             <p>
-                So I wanted to build a platform where people can
-                support this people like me.
+                So I wanted to build a platform where people can support others like me.
             </p>
         </section>
         <section id="features" class="container py-2">
             <h3>
-                How It works ?
+                How It Works?
             </h3>
             <ul>
                 <li>
-                    Create an account(we also support Google Authentication for fast registration)
+                    Create an account (we also support Google Authentication for fast registration)
                 </li>
                 <li>
-                    Pick a city where you want spend your night or just few hours
+                    Pick a city where you want to spend your night or just a few hours
                 </li>
                 <li>
-                    Find an announce that fit your needs or post one yourself
+                    Find an announcement that fits your needs or post one yourself
                 </li>
                 <li>
                     Chat with someone or wait until someone can help you
@@ -79,22 +103,23 @@
         </section>
         <section id="pricing" class="container py-2">
             <h3>
-                What Is The Price ?
+                What Is The Price?
             </h3>
             <p>
                 Using the platform costs you no money.
             </p>
             <p>
-                I encourage helping the others for no money because this is an emergency.
-                Anyway if you can offer any services to your host in a way would be great. What this means ?
+                I encourage helping others for no money because this is an emergency.
+                Anyway, if you can offer any services to your host, that would be great. What does this mean?
             </p>
             <p>
-                If your host need an electrition and you are an electrition and can help you can change
-                your skills for few hours of hosting. I like to call this win-win!
+                If your host needs an electrician and you are one, you can trade your skills for a few hours of hosting.
+                I like to call this a win-win!
             </p>
             <p>
                 You can support this platform with a donation on my
-                <a class="text-primary" href="https://www.paypal.com/paypalme/mihaiciorobitca" style="cursor: pointer;">PayPal</a>
+                <a class="text-primary" href="https://www.paypal.com/paypalme/mihaiciorobitca"
+                    style="cursor: pointer;">PayPal</a>
             </p>
         </section>
     </main>

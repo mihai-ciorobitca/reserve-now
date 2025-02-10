@@ -6,56 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer></script>
-    <!-- <meta http-equiv="refresh" content="1"> -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <title>Register Page</title>
-    <style>
-        .turnstile-container {
-            width: 500px;
-            /* Adjust width to your preference */
-            height: auto;
-            /* Adjust height accordingly */
-            margin: 0 auto;
-            /* Center it */
-        }
-
-        .cf-turnstile {
-            width: 100% !important;
-            /* Make sure it fills the container */
-        }
-    </style>
-
 </head>
 
 <body class="bg-dark">
     <div class="container d-flex justify-content-center align-items-center min-vh-100">
         <div class="bg-light p-4 rounded shadow col-sm-10 col-md-8 col-lg-6 col-xl-5">
+            <div class="h2 align-items-center justify-content-center d-flex p-3">
+                Register Form
+            </div>
             <form id="form" action="/auth/register" method="post">
-                <div class="h2 align-items-center justify-content-center d-flex p-3">
-                    Register Form
-                </div>
-                <button class="form-group btn btn-dark w-100 border rounded-pill">Continue with Google</button>
-                <div class="d-flex align-items-center">
-                    <div style="flex: 1; border-top: 1px solid #ced4da;"></div>
-                    <span class="mx-3">Or</span>
-                    <div style="flex: 1; border-top: 1px solid #ced4da;"></div>
-                </div>
-                <div id="alertContainer"
-                    class="{% if status == 'success' %}alert alert-success{% elif status == 'error' %}alert alert-danger {% else %} d-none {% endif %}"
-                    role="alert"> {{ message }}
-                </div>
-                <script>
-                    const alertContainer = document.getElementById('alertContainer');
-                    if (alertContainer) {
-                        const redirectURL = alertContainer.dataset.redirectUrl;
+                <div id="message"></div>
 
-                        if (redirectURL) {
-                            setTimeout(() => {
-                                window.location.href = redirectURL;
-                            }, 2000);
-                        }
-                    }
-                </script>
                 <div class="form-group">
                     <label for="email-input">
                         Email<span class="text-danger">*</span>
@@ -68,19 +32,69 @@
                         Password<span class="text-danger">*</span>
                     </label>
                     <input type="password" minlength="6" name="password" class="form-control" id="password-input"
-                        placeholder="Enter passsword" required />
+                        placeholder="Enter password" required />
                 </div>
                 <button type="submit" class="form-group btn btn-primary w-100 rounded-pill">Register with Email</button>
                 <div class="form-group d-flex justify-content-center align-items-center">
                     <div class="g-recaptcha" data-sitekey="6LfxR88qAAAAABPMZbbea_3aIPbO1wqkWAvyNkCz"></div>
                 </div>
                 <p class="form-group d-flex align-items-center justify-content-center">
-                    <span class="mr-2">Already have an account ?</span>
-                    <a href="/auth/login"> Login</a>
+                    <span class="mr-2">Already have an account?</span>
+                    <a href="/auth/login">Login</a>
                 </p>
             </form>
         </div>
     </div>
+
+    <script>
+        $(document).ready(function () {
+            $("#form").on("submit", async function (e) {
+                e.preventDefault();
+
+                const email = $('#email-input').val();
+                const password = $('#password-input').val();
+                const recaptchaResponse = grecaptcha.getResponse(); 
+
+                if (!recaptchaResponse) {
+                    $('#message').text("Please complete the CAPTCHA").addClass("alert alert-danger");
+                    await setTimeout(() => {
+                        $('#message').removeClass().text("");
+                    }, 5000);
+                    return;
+                }
+
+                try {
+                    const response = await fetch("/auth/register", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password,
+                            recaptcha_response: recaptchaResponse
+                        }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        $('#message').text(data.message).addClass("alert alert-danger");
+                    } else {
+                        $('#message').text(data.message).addClass("alert alert-success");
+                        setTimeout(() => {
+                            window.location.href = "/auth/login";
+                        }, 3000);
+                    }
+                } catch (error) {
+                    $('#message').text("Something went wrong. Please try again.").addClass("alert alert-danger");
+                    await setTimeout(() => {
+                        $('#message').removeClass().text("");
+                    }, 5000);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -1,8 +1,10 @@
-from flask import Blueprint, request, session, render_template, redirect
-from .supabase_module import supabase_client
+from flask import Blueprint, request, session, render_template, redirect, jsonify
+from .supabase_module import supabase_client, supabase_admin
 from dotenv import load_dotenv
 from os import getenv
 from requests import post
+from gotrue.errors import AuthApiError
+from json import loads
 
 load_dotenv()
 
@@ -11,63 +13,99 @@ recaptcha_site_key = getenv("RECAPTCHA_SITE_KEY")
 
 auth_blueprint = Blueprint("auth", __name__)
 
+
 @auth_blueprint.route("/login", methods=["GET", "POST"])
 def login():
-    status, message, redirect_url = None, None, None
     if request.method == "POST":
-        email, password = request.form["email"], request.form["password"]
-        if (email, password) == ("admin@mail.com", "admin"):
-            session["admin"] = True
-            status, message, redirect_url = True, "Succesful login", "/admin"
-        else:
-            data = supabase_client.auth().sign_in_with_password(
+        try:
+            data = request.get_json()
+            email = data.get("email")
+            password = data.get("password")
+            response = supabase_client.auth.sign_in_with_password(
                 {"email": email, "password": password}
             )
-            if data.user:
-                user = data.user
-                session["user_id"] = user.id
-                session["user_email"] = user.email
-                session["access_token"] = data.session.access_token
-                session["email"] = email
-                status, message, redirect_url = True, "Succesful login", "/home"
+            if response:
+                user = response.user
+                if user.email == "admin@mail.com":
+                    session["admin"] = True
+                    redirect_url = "/admin"
+                else:
+                    session["email"] = email
+                    session["id"] = user.id
+                    redirect_url = "/home"
+                return jsonify({"message": "Succesful login", "redirect_url": redirect_url}), 200
             else:
-                status, message = False, "Wrong email or password"
-    if redirect_url:
-        return render_template(
-            "auth/login.html", message=message, status=status, redirect_url=redirect_url
-        )
-    return render_template("auth/login.html", message=message, status=status)
+                print(response)
+                return jsonify({"message", response}), 400
+        except AuthApiError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception as e:
+            return jsonify({"message": str(e)}), 400
+    return render_template("auth/login.html")
+
+
+@auth_blueprint.route("/login/google")
+def google_login():
+    response = supabase_client.auth.sign_in_with_oauth(
+        {"provider": "google", "options": {"redirect_to": f"{request.host_url}auth/google/callback"}}
+    )
+    return redirect(response.url)
+
+@auth_blueprint.route("/google/callback")
+def callback():
+    code = request.args.get("code")
+    next = request.args.get("next", "/home")
+    if code:
+        response = supabase_client.auth.exchange_code_for_session({"auth_code": code})
+        user = response.user
+        session["email"] = user.email
+        session["id"] = user.id
+    return redirect(next)
 
 
 @auth_blueprint.route("/register", methods=["GET", "POST"])
 def register():
-    message, status, redirect_url = None, None, None
     if request.method == "POST":
-        recaptcha_response = request.form.get('g-recaptcha-response')
-        if recaptcha_response:
-            payload = {
-                'secret': recaptcha_secret_key,
-                'response': recaptcha_response
-            }
-            response = post('https://www.google.com/recaptcha/api/siteverify', data=payload).json()
-            if response.get("success"):
-                email, password = request.form["email"], request.form["password"]
-                response = supabase_client.auth.sign_up({"email": email, "password": password})
-                status = "success"
-                message = "Succesful registered"
-            else:
-                status = "error"
-                message = "Wrong captcha"
-        else:
-            status = "error"
-            message = "Please complete captcha"
-    if redirect_url:
-        return render_template("register.html", status=status, message=message, redirect_url=redirect_url)
-    return render_template("auth/register.html", message=message, status=status)
+        try:
+            data = request.get_json()
+            recaptcha_response = data.get("recaptcha_response")
+            if recaptcha_response:
+                payload = {"secret": recaptcha_secret_key, "response": recaptcha_response}
+                response = post("https://www.google.com/recaptcha/api/siteverify", data=payload).json()
+                if response.get("success"):
+                    email = data.get("email")
+                    password = data.get("password")
+                    response = supabase_admin.auth.admin.create_user({
+                        "email": email,
+                        "password": password,
+                        "user_metadata": {"email": email},
+                    })
+                    if response:
+                        response = supabase_admin.auth.admin.invite_user_by_email(
+                            email,
+                            {"redirect_to": "https://reserve-now.onrender.com/auth/login"},
+                        )
+                        if response:
+                            return (
+                                jsonify(
+                                    {"message": "User created. Check email for verification"}
+                                ),
+                                200,
+                            )
+                        else:
+                            return jsonify({"message": response}), 200
+                    return jsonify({"message": response}), 200
+                return jsonify({"message": "Wrong captcha"}), 400
+            return jsonify({"message": "Please complete captcha"}), 400
+        except AuthApiError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception as e:
+            return jsonify({"message": str(e)}), 400
+    return render_template("auth/register.html")
 
 
-@auth_blueprint.route("/logout", methods=["POST"])
+@auth_blueprint.post("/logout")
 def logout():
-    # supabase_client.auth().sign_out()
-    session.clear()
-    return redirect("login")
+    supabase_client.auth.sign_out()
+    session.pop("email", None)
+    return redirect("/home")
