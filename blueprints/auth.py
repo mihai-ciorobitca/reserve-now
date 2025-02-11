@@ -154,9 +154,7 @@ def update_password():
             data = request.get_json()
             new_password = data["new_password"]
             response = supabase_admin.auth.update_user(
-                {
-                    "redirect_to": "https://reserve-now.onrender.com/auth/update-password",
-                },
+                {"password": new_password}
             )
             if response:
                 return jsonify({"message": "Password changed"}), 200
