@@ -21,12 +21,12 @@ def login_required(func):
     return wrapper
 
 
-@home_blueprint.get("/home")
+@home_blueprint.get("/")
 @login_required
 def home():
     response = (
         supabase_admin.table("posts")
-        .select("title, city, description, public_url, username, user_id")
+        .select("*")
         .neq("email", session["email"])
         .execute()
     )
@@ -35,13 +35,22 @@ def home():
     return render_template("home/home.html", posts=posts, username=username)
 
 
-@home_blueprint.get("/home/chats")
+@home_blueprint.get("/chats")
 @login_required
 def chat_get():
     supabase_url = getenv("SUPABASE_URL")
     supabase_anon_key = getenv("SUPABASE_ANON_KEY")
+    
+    access_token = session.get("access_token", False)
+    refresh_token = session.get("refresh_token", False)
+    if not access_token or not refresh_token:
+        supabase_admin.auth.sign_out()
+        session.clear()
+        return redirect("/home")
+    
     sender_id = session["id"]
     sender_username = session["email"].split("@")[0]
+    
     response = (
         supabase_admin.table("messages")
         .select("receiver_username, receiver_id, sender_id, sender_username")
@@ -49,6 +58,7 @@ def chat_get():
         .execute()
     )
     data = response.data
+    
     chats = {}
     for item in data:
         if item["sender_id"] == sender_id:
@@ -57,13 +67,7 @@ def chat_get():
             chats[item["sender_id"]] = item["sender_username"]
     if session.get("current_receiver", False):
         chats[session["current_receiver"][0]]=session["current_receiver"][1]
-    access_token = session.get("access_token", False)
-    refresh_token = session.get("refresh_token", False)
-    if not access_token or not refresh_token:
-        supabase_admin.auth.sign_out()
-        session.clear()
-        return redirect("/home")
-    print(access_token, refresh_token)
+                
     return render_template(
         "home/chats.html",
         supabase_url=supabase_url,
@@ -76,7 +80,7 @@ def chat_get():
     )
 
 
-@home_blueprint.post("/home/chats")
+@home_blueprint.post("/chats")
 @login_required
 def chat_post():
     user_id = request.form["user_id"]
@@ -86,7 +90,7 @@ def chat_post():
     return redirect("/home/chats")
 
 
-@home_blueprint.get("/home/my-posts")
+@home_blueprint.get("/my-posts")
 @login_required
 def my_posts():
     response = (
@@ -99,7 +103,7 @@ def my_posts():
     return render_template("home/my-posts.html", posts=posts)
 
 
-@home_blueprint.route("/home/create", methods=["GET", "POST"])
+@home_blueprint.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
     if request.method == "POST":

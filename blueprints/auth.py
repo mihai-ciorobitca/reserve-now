@@ -9,6 +9,7 @@ load_dotenv()
 
 recaptcha_secret_key = getenv("RECAPTCHA_SECRET_KEY")
 recaptcha_site_key = getenv("RECAPTCHA_SITE_KEY")
+admin_email = getenv("ADMIN_EMAIL")
 
 auth_blueprint = Blueprint("auth", __name__)
 
@@ -25,7 +26,7 @@ def login():
             )
             if response:
                 user = response.user
-                if user.email == "admin@mail.com":
+                if user.email == admin_email:
                     session["admin"] = True
                     redirect_url = "/admin"
                 else:
@@ -126,6 +127,43 @@ def register():
             return jsonify({"message": str(e)}), 400
     return render_template("auth/register.html")
 
+
+@auth_blueprint.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            email = data["email"]
+            response = supabase_admin.auth.reset_password_for_email(
+                email,
+                {
+                    "redirect_to": "https://reserve-now.onrender.com/auth/update-password",
+                },
+            )
+            if response:
+                return jsonify({"message": "Reset email link sent"}), 200
+            return jsonify({"message": response}), 400
+        except Exception as e:
+            return jsonify({"message": str(e)}), 400
+    return render_template("auth/reset-password.html") 
+
+@auth_blueprint.route("/update-password", methods=["GET", "POST"])
+def update_password():
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            new_password = data["new_password"]
+            response = supabase_admin.auth.update_user(
+                {
+                    "redirect_to": "https://reserve-now.onrender.com/auth/update-password",
+                },
+            )
+            if response:
+                return jsonify({"message": "Password changed"}), 200
+            return jsonify({"message": response}), 400
+        except Exception as e:
+            return jsonify({"message": str(e)}), 400
+    return render_template("auth/update-password.html") 
 
 @auth_blueprint.post("/logout")
 def logout():
