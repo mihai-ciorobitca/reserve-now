@@ -20,7 +20,7 @@ def create_app():
     app.register_blueprint(errors_blueprint)
     app.register_blueprint(admin_blueprint)
     app.register_blueprint(auth_blueprint, url_prefix="/auth")
-    app.register_blueprint(main_blueprint)
+    app.register_blueprint(main_blueprint, url_prefix="/home")
     app.register_blueprint(home_blueprint)
     
     return app
