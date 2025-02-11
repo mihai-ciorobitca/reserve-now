@@ -13,11 +13,12 @@ home_blueprint = Blueprint("home", __name__)
 def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if session.get("email"):
+        if session.get("email") and session.get("username"):
             return func(*args, **kwargs)
+        session.clear()
         return redirect("/auth/login")
-    return wrapper
 
+    return wrapper
 
 
 @home_blueprint.get("/home")
@@ -25,28 +26,64 @@ def login_required(func):
 def home():
     response = (
         supabase_admin.table("posts")
-        .select("title, city, description, public_url")
+        .select("title, city, description, public_url, username, user_id")
         .neq("email", session["email"])
         .execute()
     )
     posts = response.data
-    return render_template("home/home.html", posts=posts)
+    username = session["email"].split("@")[0]
+    return render_template("home/home.html", posts=posts, username=username)
 
 
 @home_blueprint.get("/home/chats")
-@home_blueprint.get("/home/chats/<user_id>")
 @login_required
-def chat(user_id=None):
+def chat_get():
     supabase_url = getenv("SUPABASE_URL")
     supabase_anon_key = getenv("SUPABASE_ANON_KEY")
-    chats = []
+    sender_id = session["id"]
+    sender_username = session["email"].split("@")[0]
+    response = (
+        supabase_admin.table("messages")
+        .select("receiver_username, receiver_id, sender_id, sender_username")
+        .or_(f"sender_id.eq.{sender_id},receiver_id.eq.{sender_id}")
+        .execute()
+    )
+    data = response.data
+    chats = {}
+    for item in data:
+        if item["sender_id"] == sender_id:
+            chats[item["receiver_id"]] = item["receiver_username"]
+        else:
+            chats[item["sender_id"]] = item["sender_username"]
+    if session.get("current_receiver", False):
+        chats[session["current_receiver"][0]]=session["current_receiver"][1]
+    access_token = session.get("access_token", False)
+    refresh_token = session.get("refresh_token", False)
+    if not access_token or not refresh_token:
+        supabase_admin.auth.sign_out()
+        session.clear()
+        return redirect("/home")
+    print(access_token, refresh_token)
     return render_template(
         "home/chats.html",
         supabase_url=supabase_url,
         supabase_anon_key=supabase_anon_key,
-        user_id=user_id,
         chats=chats,
+        sender_id=sender_id,
+        sender_username=sender_username,
+        access_token = access_token,
+        refresh_token = refresh_token
     )
+
+
+@home_blueprint.post("/home/chats")
+@login_required
+def chat_post():
+    user_id = request.form["user_id"]
+    username = request.form["username"]
+    supabase_admin.auth.sign_out()
+    session["current_receiver"] = (user_id, username)
+    return redirect("/home/chats")
 
 
 @home_blueprint.get("/home/my-posts")
@@ -80,7 +117,6 @@ def create():
             file_options={"content-type": image.content_type},
         )
         public_url = supabase_admin.storage.from_("images").get_public_url(image_path)
-        print(public_url)
         supabase_admin.table("posts").insert(
             {
                 "user_id": user_id,
@@ -90,6 +126,7 @@ def create():
                 "email": session["email"],
                 "description": description,
                 "public_url": public_url,
+                "username": session["email"].split("@")[0],
             }
         ).execute()
         return redirect("/home/my-posts")

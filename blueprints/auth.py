@@ -1,5 +1,5 @@
 from flask import Blueprint, request, session, render_template, redirect, jsonify
-from .supabase_module import supabase_client, supabase_admin
+from .supabase_module import supabase_admin
 from dotenv import load_dotenv
 from os import getenv
 from requests import post
@@ -20,7 +20,7 @@ def login():
             data = request.get_json()
             email = data.get("email")
             password = data.get("password")
-            response = supabase_client.auth.sign_in_with_password(
+            response = supabase_admin.auth.sign_in_with_password(
                 {"email": email, "password": password}
             )
             if response:
@@ -30,7 +30,10 @@ def login():
                     redirect_url = "/admin"
                 else:
                     session["email"] = email
+                    session["username"] = user.email.split("@")[0]
                     session["id"] = user.id
+                    session["access_token"] = response.session.access_token
+                    session["refresh_token"] = response.session.refresh_token
                     redirect_url = "/home"
                 return (
                     jsonify(
@@ -50,7 +53,7 @@ def login():
 
 @auth_blueprint.route("/login/google")
 def google_login():
-    response = supabase_client.auth.sign_in_with_oauth(
+    response = supabase_admin.auth.sign_in_with_oauth(
         {
             "provider": "google",
             "options": {"redirect_to": f"{request.host_url}auth/google/callback"},
@@ -64,9 +67,10 @@ def callback():
     code = request.args.get("code")
     next = request.args.get("next", "/home")
     if code:
-        response = supabase_client.auth.exchange_code_for_session({"auth_code": code})
+        response = supabase_admin.auth.exchange_code_for_session({"auth_code": code})
         user = response.user
         session["email"] = user.email
+        session["username"] = user.email.split("@")[0]
         session["id"] = user.id
     return redirect(next)
 
@@ -125,6 +129,6 @@ def register():
 
 @auth_blueprint.post("/logout")
 def logout():
-    supabase_client.auth.sign_out()
-    session.pop("email", None)
+    supabase_admin.auth.sign_out()
+    session.clear()
     return redirect("/home")

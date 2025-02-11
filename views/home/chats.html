@@ -51,6 +51,14 @@
         .input-group {
             background-color: #1d2b3a;
         }
+
+        .list-item {
+            cursor: pointer;
+        }
+
+        .message-sender {
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -67,12 +75,14 @@
                     <input type="text" class="form-control bg-transparent border-0 text-white"
                         placeholder="Search groups">
                 </form>
-                <div class="list-group" style="background-color: #1d1828;">
-                    {% for chat in chats %}
+                <div class="list-group" style="background-color: #2a3a4a;">
+                    {% for receiver_id, receiver_username in chats.items() %}
                     <div class="list-item">
-                        <div class="list-group-item p-3 group-link d-md-none border-bottom text-white d-flex align-items-center bg-transparent">
-                            <span>{{ chat.name }}</span>
-                            <input type="hidden" value="{{chat.id}}">
+                        <div
+                            class="list-group-item p-3 group-link border-bottom text-white d-flex align-items-center bg-transparent">
+                            <span class="text-white">{{ receiver_username }}</span>
+                            <input type="hidden" value="{{receiver_id}}">
+                            <input type="hidden" value="{{receiver_username}}">
                         </div>
                     </div>
                     {% endfor %}
@@ -80,6 +90,13 @@
             </div>
 
             <div class="col-md-9 chat-content h-100 d-flex flex-column p-0">
+                <div class="chat-header p-3">
+                    <h3 id="current-chat-name" class="text-white">
+                        Open a Chat
+                    </h3>
+                    <input type="hidden" id="current-receiver-id" value="" />
+                    <input type="hidden" id="current-receiver-username" value="" />
+                </div>
                 <button class="btn btn-warning d-md-none m-3 back-to-groups">
                     <i class="bi bi-arrow-left"></i> Back to Groups
                 </button>
@@ -87,7 +104,7 @@
                 </div>
                 <div class="input-group w-100 p-3">
                     <input type="text" class="form-control bg-transparent border text-white flex-grow-1"
-                        id="message-input" placeholder="Type your message">
+                        id="message-input" placeholder="Type your message" disabled>
                     <div class="input-group-append">
                         <button class="btn btn-warning" type="button" id="send-message-btn">Send</button>
                     </div>
@@ -98,31 +115,51 @@
 
     <script>
         $(document).ready(() => {
+            const supabaseClient = supabase.createClient("{{supabase_url}}", "{{supabase_anon_key}}");
+            supabaseClient.auth.setSession({ access_token: "{{access_token}}", refresh_token: "{{refresh_token}}" });
+            console.log(supabaseClient)
+            const sender_id = "{{sender_id}}"
+            const sender_username = "{{sender_username}}"
+            let currentChannel = null;
+
             $('.group-link').on('click', function (e) {
-                $('.custom-sidebar').removeClass('d-md-block');
-                $('.custom-sidebar').addClass('d-none');
-                $('.chat-content').removeClass('d-none');
-                $('.chat-content').addClass('d-flex');
+                $("#message-input").attr("disabled", false);
+
+                const chatUsername = $(this).find('span').text();
+                const receiver_id = $(this).find("input")[0].value;
+                const receiver_username = $(this).find("input")[1].value;
+
+                $('#current-chat-name').text(chatUsername);
+                $('#current-receiver-id').val(receiver_id);
+                $('#current-receiver-username').val(receiver_username);
+
+                if (!$('.custom-sidebar').hasClass('d-none')) {
+                    $('.custom-sidebar').addClass('d-none');
+                    $('.chat-content').removeClass('d-none').addClass('d-flex');
+                }
+
+                const channelId = [sender_id, receiver_id].sort();
+
+                console.log(channelId)
+
+                const channel = supabaseClient.channel(channelId);
+
+                channel.on("broadcast", { event: "new-message" }, (data) => {
+                    console.log(data)
+                    payload = data.payload
+                    displayMessage(payload.message, payload.sender_username, payload.sender_id, payload.created_at);
+                }).subscribe();
+
+                currentChannel = channel;
+
+                fetchMessages(sender_id, receiver_id);
             });
 
             $('.back-to-groups').on('click', function () {
-                console.log("back clicked")
-                $('.custom-sidebar').addClass('d-md-block');
-                $('.custom-sidebar').removeClass('d-none');
-                $('.chat-content').addClass('d-none');
-                $('.chat-content').removeClass('d-flex');
-            });
-
-            const supabaseClient = supabase.createClient("{{supabase_url}}", "{{supabase_anon_key}}");
-
-            const channel = supabaseClient.channel("room1");
-            const groups = $('.list-group-item');
-            $('.search-form input[type="text"]').on('input', function () {
-                const searchValue = $(this).val().toLowerCase();
-                groups.each(function () {
-                    const groupText = $(this).text().toLowerCase();
-                    $(this).toggle(groupText.includes(searchValue));
-                });
+                if (!$('.chat-content').hasClass('d-none')) {
+                    $('.chat-content').addClass('d-none').removeClass('d-flex');
+                    $('.custom-sidebar').removeClass('d-none').addClass('d-md-block');
+                }
             });
 
             $('#send-message-btn').on('click', async function () {
@@ -143,73 +180,84 @@
                 }
             });
 
-            channel.on("broadcast", { event: "new-message" }, (data) => {
-                console.log("New message received!", data);
-                displayMessage(data.payload.message, data.payload.sender);
-            }).subscribe((status) => {
-                if (status === "SUBSCRIBED") {
-                    console.log("Subscribed to messages channel");
-                }
+            $('.search-form input[type="text"]').on('input', function () {
+                const groups = $('.list-group-item');
+                const searchValue = $(this).val().toLowerCase();
+                groups.each(function () {
+                    const groupText = $(this).text().toLowerCase();
+                    $(this).toggle(groupText.includes(searchValue));
+                });
             });
 
             async function sendMessage(message) {
+                const receiver_id = $('#current-receiver-id').val();
+                const receiver_username = $('#current-receiver-username').val();
+
                 const { error } = await supabaseClient
                     .from('messages')
-                    .insert([{ sender: 'user', message: message, chat_id: 'Group 1' }]);
+                    .insert([{ sender_id: sender_id, receiver_id: receiver_id, message, sender_username: sender_username, receiver_username: receiver_username }]);
 
                 if (error) {
                     console.error('Error sending message:', error);
                     return;
                 }
 
-                displayMessage(message, 'user');
-
-                channel.send({
+                created_at = new Date().toLocaleString()
+                displayMessage(message, sender_username, sender_id, created_at);
+                currentChannel.send({
                     type: "broadcast",
                     event: "new-message",
-                    payload: { message: message, sender: 'user' },
+                    payload: { message: message, sender_username: sender_username, sender_id: sender_id, created_at: created_at },
                 });
             }
 
-            function displayMessage(message, sender) {
+            function displayMessage(message, username, id, created_at) {
+                const isCurrentUser = id === sender_id;
+                const messageAlignmentClass = isCurrentUser ? 'ml-auto' : 'mr-auto';
+                const date = new Date(created_at);
+                const formattedDate = date.toLocaleString('en-US', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric',
+                    hour12: true
+                });
                 const messageElement = $(`
-                    <div class="message rounded p-2 mb-2 text-end align-items-center">
+                    <div class="message rounded p-2 mb-2 ${messageAlignmentClass} align-items-center">
+                        <h5 class="message-sender font-weight-bold">${username}</h5>
                         <p class="message-text">${message}</p>
                         <div class="message-details">
-                            <span class="message-sender">${sender}</span>
-                            <span class="message-date">${new Date().toLocaleTimeString()}</span>
+                            <span class="message-date text-muted">${formattedDate}</span>
                         </div>
                     </div>
                 `);
-
                 $('.messages').prepend($('<div class="d-flex align-items-center mb-2"></div>').append(messageElement));
             }
 
-            async function fetchMessages() {
-                const { data, error } = await supabaseClient.from('messages').select();
+            async function fetchMessages(sender_id, receiver_id) {
+                console.log(sender_id, receiver_id)
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .select()
+                    .or(`sender_id.eq.${sender_id},receiver_id.eq.${sender_id}`)
+                    .or(`sender_id.eq.${receiver_id},receiver_id.eq.${receiver_id}`)
+                    .order('created_at', { ascending: true });
+
                 if (error) {
                     console.error('Error fetching messages:', error);
                     return;
                 }
 
+                console.log(data)
+
                 const messagesContainer = $('.messages');
                 messagesContainer.empty();
                 data.forEach(msg => {
-                    const messageElement = $(`
-                        <div class="message rounded p-2 mb-2 text-end align-items-center">
-                            <p class="message-text">${msg.message}</p>
-                            <div class="message-details">
-                                <span class="message-sender">${msg.sender}</span>
-                                <span class="message-date">${new Date(msg.created_at).toLocaleTimeString()}</span>
-                            </div>
-                        </div>
-                    `);
-
-                    messagesContainer.prepend($('<div class="d-flex align-items-center mb-2"></div>').append(messageElement));
+                    displayMessage(msg.message, msg.sender_username, msg.sender_id, msg.created_at);
                 });
             }
-
-            fetchMessages();
         });
     </script>
 </body>
