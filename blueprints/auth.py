@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from os import getenv
 from requests import post
 from gotrue.errors import AuthApiError
-from json import loads
 
 load_dotenv()
 
@@ -32,7 +31,13 @@ def login():
                 else:
                     session["email"] = email
                     session["id"] = user.id
-                return jsonify({"message": "Succesful login"}), 200
+                    redirect_url = "/home"
+                return (
+                    jsonify(
+                        {"message": "Succesful login", "redirect_url": redirect_url}
+                    ),
+                    200,
+                )
             else:
                 print(response)
                 return jsonify({"message", response}), 400
@@ -46,9 +51,13 @@ def login():
 @auth_blueprint.route("/login/google")
 def google_login():
     response = supabase_client.auth.sign_in_with_oauth(
-        {"provider": "google", "options": {"redirect_to": f"{request.host_url}auth/google/callback"}}
+        {
+            "provider": "google",
+            "options": {"redirect_to": f"{request.host_url}auth/google/callback"},
+        }
     )
     return redirect(response.url)
+
 
 @auth_blueprint.route("/google/callback")
 def callback():
@@ -69,25 +78,36 @@ def register():
             data = request.get_json()
             recaptcha_response = data.get("recaptcha_response")
             if recaptcha_response:
-                payload = {"secret": recaptcha_secret_key, "response": recaptcha_response}
-                response = post("https://www.google.com/recaptcha/api/siteverify", data=payload).json()
+                payload = {
+                    "secret": recaptcha_secret_key,
+                    "response": recaptcha_response,
+                }
+                response = post(
+                    "https://www.google.com/recaptcha/api/siteverify", data=payload
+                ).json()
                 if response.get("success"):
                     email = data.get("email")
                     password = data.get("password")
-                    response = supabase_admin.auth.admin.create_user({
-                        "email": email,
-                        "password": password,
-                        "user_metadata": {"email": email},
-                    })
+                    response = supabase_admin.auth.admin.create_user(
+                        {
+                            "email": email,
+                            "password": password,
+                            "user_metadata": {"email": email},
+                        }
+                    )
                     if response:
                         response = supabase_admin.auth.admin.invite_user_by_email(
                             email,
-                            {"redirect_to": "https://reserve-now.onrender.com/auth/login"},
+                            options={
+                                "redirect_to": "https://reserve-now.onrender.com/auth/login"
+                            },
                         )
                         if response:
                             return (
                                 jsonify(
-                                    {"message": "User created. Check email for verification"}
+                                    {
+                                        "message": "User created. Check email for verification"
+                                    }
                                 ),
                                 200,
                             )

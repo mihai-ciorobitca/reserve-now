@@ -81,7 +81,7 @@
                 } else {
                     $('#message').text(data.message).addClass("alert").addClass('alert-success');
                     await setTimeout(() => {
-                        $(location).prop("href", "/home");
+                        $(location).prop("href", "{{ redirect_url }}");
                     }, 3000);
                 }
             });
